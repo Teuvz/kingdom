@@ -7,7 +7,7 @@ import haxe.Timer;
 import motion.Actuate;
 import openfl.Assets;
 import flash.geom.Rectangle;
-import openfl.geom.Point;
+import flash.geom.Point;
 import flash.events.Event;
 
 /**

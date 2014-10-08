@@ -10,9 +10,9 @@ import motion.Actuate;
 import openfl.Assets;
 import com.ukuleledog.games.kingdom.elements.Riku;
 import flash.ui.Keyboard;
-import openfl.display.Bitmap;
+import flash.display.Bitmap;
 import flash.geom.Rectangle;
-import openfl.geom.Point;
+import flash.geom.Point;
 
 /**
  * ...

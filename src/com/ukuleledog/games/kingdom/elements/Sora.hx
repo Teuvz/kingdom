@@ -22,8 +22,8 @@ class Sora extends AnimatedObject
 		createAnimation( 'idle', 0, 25, 1, 80, 40 );
 		createAnimation( 'run-down', 0, 100, 8, 50, 50, 0.1 );
 		createAnimation( 'run-up', 0, 150, 8, 55, 50, 0.1 );
-		createAnimation( 'run-left', 0, 205, 8, 50, 50, 0.1 );
-		createAnimation( 'run-right', 0, 255, 8, 50, 50, 0.1 );
+		createAnimation( 'run-left', 0, 205, 8, 50, 50, 0.08 );
+		createAnimation( 'run-right', 0, 255, 8, 50, 50, 0.08 );
 		animate();
 	}
 	

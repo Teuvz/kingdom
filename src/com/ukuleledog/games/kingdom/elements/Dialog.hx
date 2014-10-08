@@ -85,6 +85,7 @@ class Dialog extends Sprite
 		
 		key = new DialogKey();
 		key.y = 402;
+		key.alpha = 0;
 		
 		this.addEventListener( Event.ADDED_TO_STAGE, init );
 	}
@@ -99,6 +100,8 @@ class Dialog extends Sprite
 		currentDialog = dialog.split( "/" );
 		currentCharacter = character.split( "/" );
 		
+		addChild( key );
+		
 		stage.addEventListener( KeyboardEvent.KEY_UP, keyUpHandler );
 		
 		displayNextText();
@@ -112,13 +115,13 @@ class Dialog extends Sprite
 		switch( preciseChacater )
 		{
 			case 'sora':
-				addChild( rightBackground );
-				addChild( soraFace );
+				addChildAt( soraFace, 0 );
+				addChildAt( rightBackground, 0 );
 				textField.x = 610;
 				key.x = 610;
 			case 'riku':
-				addChild( leftBackground );
-				addChild( rikuFace );
+				addChildAt( rikuFace, 0 );
+				addChildAt( leftBackground, 0 );
 				textField.x = -150;
 				key.x = 76;
 		}
@@ -126,7 +129,7 @@ class Dialog extends Sprite
 		textField.text = currentDialog.shift();
 		addChild( textField );
 		
-		addChild( key );
+		key.alpha = 0;
 		
 		if ( preciseChacater == 'sora' || preciseChacater == 'kairi' )
 			Actuate.tween( this, 1, { x: -350 } );
@@ -139,6 +142,7 @@ class Dialog extends Sprite
 	private function unlockClick()
 	{
 		readyForClick = true;
+		key.alpha = 1;
 	}
 	
 	private function keyUpHandler( e:KeyboardEvent )
@@ -148,8 +152,8 @@ class Dialog extends Sprite
 		
 		readyForClick = false;
 		
-		removeChild( key );
-			
+		key.alpha = 0;
+					
 		if ( preciseChacater == 'sora' || preciseChacater == 'kairi' )
 			Actuate.tween( this, 1, { x: 350 } );
 		else

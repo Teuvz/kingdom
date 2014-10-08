@@ -1,26 +1,20 @@
 package;
 
 
-import haxe.Timer;
+import flash.display.Bitmap;
+import flash.display.BitmapData;
+import flash.display.MovieClip;
+import flash.text.Font;
+import flash.media.Sound;
+import flash.net.URLRequest;
+import flash.utils.ByteArray;
 import haxe.Unserializer;
-import openfl.display.Bitmap;
-import openfl.display.BitmapData;
-import openfl.display.MovieClip;
-import openfl.events.Event;
-import openfl.text.Font;
-import openfl.media.Sound;
-import openfl.net.URLRequest;
-import openfl.utils.ByteArray;
 import openfl.Assets;
 
 #if (flash || js)
-import openfl.display.Loader;
-import openfl.events.Event;
-import openfl.net.URLLoader;
-#end
-
-#if sys
-import sys.FileSystem;
+import flash.display.Loader;
+import flash.events.Event;
+import flash.net.URLLoader;
 #end
 
 #if ios
@@ -28,16 +22,12 @@ import openfl.utils.SystemPath;
 #end
 
 
-@:access(openfl.media.Sound)
 class DefaultAssetLibrary extends AssetLibrary {
 	
 	
-	public var className (default, null) = new Map <String, Dynamic> ();
-	public var path (default, null) = new Map <String, String> ();
-	public var type (default, null) = new Map <String, AssetType> ();
-	
-	private var lastModified:Float;
-	private var timer:Timer;
+	public static var className (default, null) = new Map <String, Dynamic> ();
+	public static var path (default, null) = new Map <String, String> ();
+	public static var type (default, null) = new Map <String, AssetType> ();
 	
 	
 	public function new () {
@@ -47,73 +37,57 @@ class DefaultAssetLibrary extends AssetLibrary {
 		#if flash
 		
 		className.set ("img/backdrops.png", __ASSET__img_backdrops_png);
-		type.set ("img/backdrops.png", AssetType.IMAGE);
+		type.set ("img/backdrops.png", Reflect.field (AssetType, "image".toUpperCase ()));
 		className.set ("img/characters.png", __ASSET__img_characters_png);
-		type.set ("img/characters.png", AssetType.IMAGE);
+		type.set ("img/characters.png", Reflect.field (AssetType, "image".toUpperCase ()));
 		className.set ("img/dialog.png", __ASSET__img_dialog_png);
-		type.set ("img/dialog.png", AssetType.IMAGE);
+		type.set ("img/dialog.png", Reflect.field (AssetType, "image".toUpperCase ()));
 		className.set ("music/01 - Dearly Beloved.flac", __ASSET__music_01___dearly_beloved_flac);
-		type.set ("music/01 - Dearly Beloved.flac", AssetType.BINARY);
+		type.set ("music/01 - Dearly Beloved.flac", Reflect.field (AssetType, "binary".toUpperCase ()));
 		
 		
 		#elseif html5
 		
-		var id;
-		id = "img/backdrops.png";
-		path.set (id, id);
-		type.set (id, AssetType.IMAGE);
-		id = "img/characters.png";
-		path.set (id, id);
-		type.set (id, AssetType.IMAGE);
-		id = "img/dialog.png";
-		path.set (id, id);
-		type.set (id, AssetType.IMAGE);
-		id = "music/01 - Dearly Beloved.flac";
-		path.set (id, id);
-		type.set (id, AssetType.BINARY);
+		path.set ("img/backdrops.png", "img/backdrops.png");
+		type.set ("img/backdrops.png", Reflect.field (AssetType, "image".toUpperCase ()));
+		path.set ("img/characters.png", "img/characters.png");
+		type.set ("img/characters.png", Reflect.field (AssetType, "image".toUpperCase ()));
+		path.set ("img/dialog.png", "img/dialog.png");
+		type.set ("img/dialog.png", Reflect.field (AssetType, "image".toUpperCase ()));
+		path.set ("music/01 - Dearly Beloved.flac", "music/01 - Dearly Beloved.flac");
+		type.set ("music/01 - Dearly Beloved.flac", Reflect.field (AssetType, "binary".toUpperCase ()));
 		
 		
 		#else
 		
-		#if (windows || mac || linux)
-		
-		var useManifest = false;
-		
-		className.set ("img/backdrops.png", __ASSET__img_backdrops_png);
-		type.set ("img/backdrops.png", AssetType.IMAGE);
-		
-		className.set ("img/characters.png", __ASSET__img_characters_png);
-		type.set ("img/characters.png", AssetType.IMAGE);
-		
-		className.set ("img/dialog.png", __ASSET__img_dialog_png);
-		type.set ("img/dialog.png", AssetType.IMAGE);
-		
-		className.set ("music/01 - Dearly Beloved.flac", __ASSET__music_01___dearly_beloved_flac);
-		type.set ("music/01 - Dearly Beloved.flac", AssetType.BINARY);
-		
-		
-		if (useManifest) {
+		try {
 			
-			loadManifest ();
+			#if blackberry
+			var bytes = ByteArray.readFile ("app/native/manifest");
+			#elseif tizen
+			var bytes = ByteArray.readFile ("../res/manifest");
+			#elseif emscripten
+			var bytes = ByteArray.readFile ("assets/manifest");
+			#else
+			var bytes = ByteArray.readFile ("manifest");
+			#end
 			
-			if (Sys.args ().indexOf ("-livereload") > -1) {
+			if (bytes != null) {
 				
-				var path = FileSystem.fullPath ("manifest");
-				lastModified = FileSystem.stat (path).mtime.getTime ();
+				bytes.position = 0;
 				
-				timer = new Timer (2000);
-				timer.run = function () {
+				if (bytes.length > 0) {
 					
-					var modified = FileSystem.stat (path).mtime.getTime ();
+					var data = bytes.readUTFBytes (bytes.length);
 					
-					if (modified > lastModified) {
+					if (data != null && data.length > 0) {
 						
-						lastModified = modified;
-						loadManifest ();
+						var manifest:Array<AssetData> = Unserializer.run (data);
 						
-						if (eventCallback != null) {
+						for (asset in manifest) {
 							
-							eventCallback (this, "change");
+							path.set (asset.id, asset.path);
+							type.set (asset.id, asset.type);
 							
 						}
 						
@@ -121,15 +95,18 @@ class DefaultAssetLibrary extends AssetLibrary {
 					
 				}
 				
+			} else {
+				
+				trace ("Warning: Could not load asset manifest");
+				
 			}
+			
+		} catch (e:Dynamic) {
+			
+			trace ("Warning: Could not load asset manifest");
 			
 		}
 		
-		#else
-		
-		loadManifest ();
-		
-		#end
 		#end
 		
 	}
@@ -137,7 +114,7 @@ class DefaultAssetLibrary extends AssetLibrary {
 	
 	public override function exists (id:String, type:AssetType):Bool {
 		
-		var assetType = this.type.get (id);
+		var assetType = DefaultAssetLibrary.type.get (id);
 		
 		#if pixi
 		
@@ -196,13 +173,9 @@ class DefaultAssetLibrary extends AssetLibrary {
 		
 		return BitmapData.fromImage (path.get (id));
 		
-		#elseif (flash)
+		#elseif flash
 		
 		return cast (Type.createInstance (className.get (id), []), BitmapData);
-		
-		#elseif openfl_html5
-		
-		return BitmapData.fromImage (ApplicationMain.images.get (path.get (id)));
 		
 		#elseif js
 		
@@ -210,8 +183,7 @@ class DefaultAssetLibrary extends AssetLibrary {
 		
 		#else
 		
-		if (className.exists(id)) return cast (Type.createInstance (className.get (id), []), BitmapData);
-		else return BitmapData.load (path.get (id));
+		return BitmapData.load (path.get (id));
 		
 		#end
 		
@@ -220,11 +192,15 @@ class DefaultAssetLibrary extends AssetLibrary {
 	
 	public override function getBytes (id:String):ByteArray {
 		
-		#if (flash)
+		#if pixi
+		
+		return null;
+		
+		#elseif flash
 		
 		return cast (Type.createInstance (className.get (id), []), ByteArray);
-
-		#elseif (js || openfl_html5 || pixi)
+		
+		#elseif js
 		
 		var bytes:ByteArray = null;
 		var data = ApplicationMain.urlLoaders.get (path.get (id)).data;
@@ -256,8 +232,7 @@ class DefaultAssetLibrary extends AssetLibrary {
 		
 		#else
 		
-		if (className.exists(id)) return cast (Type.createInstance (className.get (id), []), ByteArray);
-		else return ByteArray.readFile (path.get (id));
+		return ByteArray.readFile (path.get (id));
 		
 		#end
 		
@@ -276,11 +251,7 @@ class DefaultAssetLibrary extends AssetLibrary {
 		
 		#else
 		
-		if (className.exists(id)) {
-			var fontClass = className.get(id);
-			Font.registerFont(fontClass);
-			return cast (Type.createInstance (fontClass, []), Font);
-		} else return new Font (path.get (id));
+		return new Font (path.get (id));
 		
 		#end
 		
@@ -291,18 +262,11 @@ class DefaultAssetLibrary extends AssetLibrary {
 		
 		#if pixi
 		
-		return null;
+		//return null;		
 		
-		#elseif (flash)
+		#elseif flash
 		
 		return cast (Type.createInstance (className.get (id), []), Sound);
-		
-		#elseif openfl_html5
-		
-		var sound = new Sound ();
-		sound.__buffer = true;
-		sound.load (new URLRequest (path.get (id)));
-		return sound; 
 		
 		#elseif js
 		
@@ -310,8 +274,7 @@ class DefaultAssetLibrary extends AssetLibrary {
 		
 		#else
 		
-		if (className.exists(id)) return cast (Type.createInstance (className.get (id), []), Sound);
-		else return new Sound (new URLRequest (path.get (id)), null, true);
+		return new Sound (new URLRequest (path.get (id)), null, true);
 		
 		#end
 		
@@ -339,7 +302,7 @@ class DefaultAssetLibrary extends AssetLibrary {
 		
 		return null;
 		
-		#elseif (flash)
+		#elseif flash
 		
 		return cast (Type.createInstance (className.get (id), []), Sound);
 		
@@ -349,58 +312,7 @@ class DefaultAssetLibrary extends AssetLibrary {
 		
 		#else
 		
-		if (className.exists(id)) return cast (Type.createInstance (className.get (id), []), Sound);
-		else return new Sound (new URLRequest (path.get (id)), null, type.get (id) == MUSIC);
-		
-		#end
-		
-	}
-	
-	
-	public override function getText (id:String):String {
-		
-		#if js
-		
-		var bytes:ByteArray = null;
-		var data = ApplicationMain.urlLoaders.get (path.get (id)).data;
-		
-		if (Std.is (data, String)) {
-			
-			return cast data;
-			
-		} else if (Std.is (data, ByteArray)) {
-			
-			bytes = cast data;
-			
-		} else {
-			
-			bytes = null;
-			
-		}
-		
-		if (bytes != null) {
-			
-			bytes.position = 0;
-			return bytes.readUTFBytes (bytes.length);
-			
-		} else {
-			
-			return null;
-		}
-		
-		#else
-		
-		var bytes = getBytes (id);
-		
-		if (bytes == null) {
-			
-			return null;
-			
-		} else {
-			
-			return bytes.readUTFBytes (bytes.length);
-			
-		}
+		return new Sound (new URLRequest (path.get (id)), null, type.get (id) == MUSIC);
 		
 		#end
 		
@@ -420,25 +332,6 @@ class DefaultAssetLibrary extends AssetLibrary {
 		#end
 		
 		return true;
-		
-	}
-	
-	
-	public override function list (type:AssetType):Array<String> {
-		
-		var items = [];
-		
-		for (id in this.type.keys ()) {
-			
-			if (type == null || exists (id, type)) {
-				
-				items.push (id);
-				
-			}
-			
-		}
-		
-		return items;
 		
 	}
 	
@@ -542,64 +435,6 @@ class DefaultAssetLibrary extends AssetLibrary {
 	}
 	
 	
-	#if (!flash && !html5)
-	private function loadManifest ():Void {
-		
-		try {
-			
-			#if blackberry
-			var bytes = ByteArray.readFile ("app/native/manifest");
-			#elseif tizen
-			var bytes = ByteArray.readFile ("../res/manifest");
-			#elseif emscripten
-			var bytes = ByteArray.readFile ("assets/manifest");
-			#else
-			var bytes = ByteArray.readFile ("manifest");
-			#end
-			
-			if (bytes != null) {
-				
-				bytes.position = 0;
-				
-				if (bytes.length > 0) {
-					
-					var data = bytes.readUTFBytes (bytes.length);
-					
-					if (data != null && data.length > 0) {
-						
-						var manifest:Array<Dynamic> = Unserializer.run (data);
-						
-						for (asset in manifest) {
-							
-							if (!className.exists (asset.id)) {
-								
-								path.set (asset.id, asset.path);
-								type.set (asset.id, Type.createEnum (AssetType, asset.type));
-								
-							}
-							
-						}
-						
-					}
-					
-				}
-				
-			} else {
-				
-				trace ("Warning: Could not load asset manifest (bytes was null)");
-				
-			}
-		
-		} catch (e:Dynamic) {
-			
-			trace ('Warning: Could not load asset manifest (${e})');
-			
-		}
-		
-	}
-	#end
-	
-	
 	public override function loadMusic (id:String, handler:Sound -> Void):Void {
 		
 		#if (flash || js)
@@ -658,59 +493,16 @@ class DefaultAssetLibrary extends AssetLibrary {
 	}
 	
 	
-	public override function loadText (id:String, handler:String -> Void):Void {
-		
-		#if js
-		
-		if (path.exists (id)) {
-			
-			var loader = new URLLoader ();
-			loader.addEventListener (Event.COMPLETE, function (event:Event) {
-				
-				handler (event.currentTarget.data);
-				
-			});
-			loader.load (new URLRequest (path.get (id)));
-			
-		} else {
-			
-			handler (getText (id));
-			
-		}
-		
-		#else
-		
-		var callback = function (bytes:ByteArray):Void {
-			
-			if (bytes == null) {
-				
-				handler (null);
-				
-			} else {
-				
-				handler (bytes.readUTFBytes (bytes.length));
-				
-			}
-			
-		}
-		
-		loadBytes (id, callback);
-		
-		#end
-		
-	}
-	
-	
 }
 
 
 #if pixi
 #elseif flash
 
-@:keep class __ASSET__img_backdrops_png extends flash.display.BitmapData { public function new () { super (0, 0, true, 0); } }
-@:keep class __ASSET__img_characters_png extends flash.display.BitmapData { public function new () { super (0, 0, true, 0); } }
-@:keep class __ASSET__img_dialog_png extends flash.display.BitmapData { public function new () { super (0, 0, true, 0); } }
-@:keep class __ASSET__music_01___dearly_beloved_flac extends openfl.utils.ByteArray { }
+class __ASSET__img_backdrops_png extends flash.display.BitmapData { public function new () { super (0, 0); } }
+class __ASSET__img_characters_png extends flash.display.BitmapData { public function new () { super (0, 0); } }
+class __ASSET__img_dialog_png extends flash.display.BitmapData { public function new () { super (0, 0); } }
+class __ASSET__music_01___dearly_beloved_flac extends flash.utils.ByteArray { }
 
 
 #elseif html5
@@ -719,15 +511,6 @@ class DefaultAssetLibrary extends AssetLibrary {
 
 
 
-
-
-#elseif (windows || mac || linux)
-
-
-@:bitmap("assets/img/backdrops.png") class __ASSET__img_backdrops_png extends flash.display.BitmapData {}
-@:bitmap("assets/img/characters.png") class __ASSET__img_characters_png extends flash.display.BitmapData {}
-@:bitmap("assets/img/dialog.png") class __ASSET__img_dialog_png extends flash.display.BitmapData {}
-@:file("assets/music/01 - Dearly Beloved.flac") class __ASSET__music_01___dearly_beloved_flac extends flash.utils.ByteArray {}
 
 
 #end
