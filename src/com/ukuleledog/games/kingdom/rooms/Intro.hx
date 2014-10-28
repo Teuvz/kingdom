@@ -44,6 +44,8 @@ class Intro extends Room
 		sora.setAnimation( 'floating' );
 		Actuate.tween( this, 2, {alpha: 1} );
 		
+		startMusic('dearly');
+		
 		Timer.delay( function() {
 			dialog.addEventListener( Event.COMPLETE, fadeOut );
 			dialog.display( 'Sora?/Hey, Sora!/Wake up sleepyhead!/...Huh?', 'riku/riku/riku/sora' );
@@ -55,6 +57,7 @@ class Intro extends Room
 		dialog.removeEventListener( Event.COMPLETE, fadeOut );
 		Actuate.tween( background, 2, { alpha:0 } ).onComplete( function() {
 			Actuate.tween( sora, 2, { alpha:0 } ).onComplete( function() {
+				stopMusic();
 				this.dispatchEvent( new Event( Event.COMPLETE ) );
 			} );
 		} );

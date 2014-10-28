@@ -10,6 +10,10 @@ import flash.geom.Point;
 import flash.geom.Rectangle;
 import flash.events.KeyboardEvent;
 import flash.ui.Keyboard;
+import openfl.Assets;
+import openfl.media.Sound;
+import openfl.media.SoundChannel;
+import openfl.media.SoundTransform;
 
 /**
  * ...
@@ -33,6 +37,9 @@ class Room extends GameObject
 	private var limitLeft:UInt;
 	private var limitRight:UInt;
 	
+	private var music:SoundChannel;
+	private var musicFile:Sound;
+	
 	public function new() 
 	{
 		super();
@@ -42,6 +49,20 @@ class Room extends GameObject
 		limitBottom = 600;
 		limitLeft = 0;
 		limitRight = 480;
+	}
+	
+	public function startMusic( file:String )
+	{
+		musicFile = Assets.getMusic( 'music/' + file+'.mp3' );
+		var transform:SoundTransform = new SoundTransform();
+		transform.volume = 0.3;
+		music = musicFile.play(0, 0, transform);
+	}
+	
+	public function stopMusic()
+	{
+		if ( music != null )
+			music.stop();
 	}
 	
 	public function setLimit( bg:BitmapData, width:UInt, height:UInt, srcX:UInt = 0, srcY:UInt = 0, limitX:UInt = 0, limitY:UInt = 0 )

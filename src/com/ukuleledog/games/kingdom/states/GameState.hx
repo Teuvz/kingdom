@@ -26,7 +26,7 @@ class GameState extends State
 	{
 		removeEventListener( Event.ADDED_TO_STAGE, init );
 		
-		room = new Destiny();
+		room = new Intro();
 		room.addEventListener( Event.COMPLETE, loadDestinyIsland );
 		addChild( room );
 	}
